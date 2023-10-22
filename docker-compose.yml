@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  mosquitto:
+    build:
+      context: .
+    ports:
+      - ${MQTT_PORT}:${MQTT_DOCKER_PORT}
+      - ${MQTT_WS_PORT}:${MQTT_DOCKER_WS_PORT}
+    networks:
+      - mqtt-broker-network
+    volumes:
+      - broker-config:/mosquitto/config
+      - broker-data:/mosquitto/data
+    environment:
+      MQTT_USER: ${MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+  management-center:
+    image: cedalo/management-center:2
+    ports:
+      - 8089:8088
+    depends_on:
+      - mosquitto
+    networks:
+      - mqtt-broker-network
+    environment:
+      CEDALO_MC_BROKER_ID: mosquitto-2.0
+      CEDALO_MC_BROKER_NAME: Mosquitto 2.0
+      CEDALO_MC_BROKER_URL: mqtt://mosquitto:1884
+      CEDALO_MC_BROKER_USERNAME: ${CEDALO_MC_BROKER_USERNAME}
+      CEDALO_MC_BROKER_PASSWORD: ${CEDALO_MC_BROKER_PASSWORD}
+      CEDALO_MC_USERNAME: ${CEDALO_MC_USERNAME}
+      CEDALO_MC_PASSWORD: ${CEDALO_MC_PASSWORD}
+volumes:
+  broker-config:
+    driver: local
+  broker-data:
+    driver: local
+networks:
+  mqtt-broker-network:
+    name: mqtt-broker-network
+    driver: bridge
